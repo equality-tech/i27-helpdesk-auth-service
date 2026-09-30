@@ -10,4 +10,3 @@ jobs:
     secrets: inherit 
     with:
       DOCKER_IMAGE_NAME: equality-tech/i27-auth-ms
-      WORKING_DIR: i27-helpdesk-auth-service
