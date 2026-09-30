@@ -1,0 +1,18 @@
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+
+target/
+*.class
+*.log
+
+# never bake local/dev config or secrets into the image
+.env
+.env.*
+src/main/resources/application-local.yml
+
+*.md
+Dockerfile
+.dockerignore

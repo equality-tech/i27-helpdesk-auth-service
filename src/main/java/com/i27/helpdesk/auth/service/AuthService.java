@@ -1,0 +1,77 @@
+package com.i27.helpdesk.auth.service;
+
+import com.i27.helpdesk.auth.model.User;
+import com.i27.helpdesk.auth.repository.UserRepository;
+import com.i27.helpdesk.auth.repository.UserRoleRepository;
+import com.i27.helpdesk.auth.security.JwtUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    public AuthService(UserRepository userRepository,
+                       UserRoleRepository userRoleRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
+
+    // ==============================
+    // 🔐 LOGIN
+    // ==============================
+    public LoginResponse login(String email, String password) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        List<String> roles = userRoleRepository.findByUser_Id(user.getId())
+                .stream()
+                .map(ur -> ur.getRole().getRoleName())
+                .collect(Collectors.toList());
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("email", user.getEmail());
+        claims.put("roles", roles);
+
+        String token = jwtUtil.generateToken(claims, user.getEmail());
+
+        return new LoginResponse(
+                token,
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                roles
+        );
+    }
+
+    // ==============================
+    // 🔐 ADMIN → RESET USER PASSWORD
+    // ==============================
+    public void resetUserPassword(Long userId, String newPassword) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+}

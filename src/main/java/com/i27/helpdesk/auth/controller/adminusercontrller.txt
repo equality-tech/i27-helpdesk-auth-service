@@ -1,0 +1,112 @@
+package com.i27.helpdesk.auth.controller;
+
+import com.i27.helpdesk.auth.dto.CreateUserRequest;
+import com.i27.helpdesk.auth.model.User;
+import com.i27.helpdesk.auth.repository.UserRepository;
+import com.i27.helpdesk.auth.service.AdminUserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import com.i27.helpdesk.auth.dto.UserWithRoleDTO;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/auth/admin")
+public class AdminUserController {
+
+    private final AdminUserService adminUserService;
+    private final UserRepository userRepository;
+    public AdminUserController(
+            AdminUserService adminUserService,
+            UserRepository userRepository
+    ) {
+        this.adminUserService = adminUserService;
+        this.userRepository = userRepository;
+    }
+
+    // =====================================================
+    // 🔐 ADMIN: Create User (STUDENT / AGENT / ADMIN)
+    // =====================================================
+    @PostMapping("/users")
+    public ResponseEntity<?> createUser(
+            @RequestBody CreateUserRequest request
+    ) {
+        User user = adminUserService.createUser(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new UserResponse(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getFullName(),
+                        user.getStatus()
+                ));
+    }
+
+    // =====================================================
+    // 🔐 ADMIN: List ALL Users  ✅ REQUIRED FOR UI
+    // =====================================================
+    // @GetMapping("/users")
+    // public ResponseEntity<List<UserResponse>> getAllUsers() {
+
+    //     List<UserResponse> users = userRepository.findAll()
+    //             .stream()
+    //             .map(user -> new UserResponse(
+    //                     user.getId(),
+    //                     user.getEmail(),
+    //                     user.getFullName(),
+    //                     user.getStatus()
+    //             ))
+    //             .toList();
+
+    //     return ResponseEntity.ok(users);
+    // }
+    @GetMapping("/users")
+    public ResponseEntity<List<UserWithRoleDTO>> getAllUsers() {
+
+        return ResponseEntity.ok(
+                adminUserService.getAllUsers()
+        );
+    }
+
+
+    // =====================================================
+    // ❌ DUPLICATE USER HANDLER
+    // =====================================================
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<?> handleDuplicateUser(
+            IllegalStateException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT) // 409
+                .body(Map.of(
+                        "error", ex.getMessage()
+                ));
+    }
+
+    // =====================================================
+    // ❌ INVALID ROLE HANDLER
+    // =====================================================
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleInvalidRole(
+            IllegalArgumentException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST) // 400
+                .body(Map.of(
+                        "error", ex.getMessage()
+                ));
+    }
+
+    // =====================================================
+    // ✅ RESPONSE DTO (SAFE)
+    // =====================================================
+    record UserResponse(
+            Long id,
+            String email,
+            String fullName,
+            String status
+    ) {}
+}

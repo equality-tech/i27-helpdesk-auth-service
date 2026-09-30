@@ -1,0 +1,30 @@
+package com.i27.helpdesk.auth.controller;
+
+import com.i27.helpdesk.auth.service.AuthService;
+import com.i27.helpdesk.auth.service.LoginResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody Map<String, String> request) {
+
+        LoginResponse response = authService.login(
+                request.get("email"),
+                request.get("password")
+        );
+
+        return ResponseEntity.ok(response);
+    }
+}
