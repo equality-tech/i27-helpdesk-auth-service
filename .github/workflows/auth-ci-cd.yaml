@@ -7,8 +7,8 @@ jobs:
   java-test-build-push:    
     name: java test build push
     uses: equality-tech/i27-helpdesk-devops/.github/workflows/wf-reuse-java.yaml@main
-    secrets: inherit 
     with:
       DOCKER_IMAGE_NAME: equality-tech/i27-auth-ms
       DOCKERHUB_USERNAME: ${{vars.DOCKERHUB_USERNAME}}
-      DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN}} 
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
