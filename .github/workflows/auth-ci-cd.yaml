@@ -1,0 +1,13 @@
+name: auth-ms-ci-cd
+on:
+  workflow_dispatch:
+
+jobs:
+  
+  java-test-build-push:    
+    name: java test build push
+    uses: equality-tech/i27-helpdesk-devops/.github/workflows/wf-reuse-java.yaml@main
+    secrets: inherit 
+    with:
+      DOCKER_IMAGE_NAME: equality-tech/i27-auth-ms
+      WORKING_DIR: i27-helpdesk-auth-service
