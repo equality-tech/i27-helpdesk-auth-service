@@ -1,6 +1,16 @@
 name: auth-ms-ci-cd
 on:
   workflow_dispatch:
+    inputs:
+      deploy_environment:
+        description: Environment to deploy
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - test
+          - prod
 
 jobs:
   
@@ -10,5 +20,6 @@ jobs:
     with:
       DOCKER_IMAGE_NAME: equalitytech/i27-auth-ms
       DOCKERHUB_USERNAME: ${{vars.DOCKERHUB_USERNAME}}
+      environment: ${{ github.event.inputs.deploy_environment }}
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
